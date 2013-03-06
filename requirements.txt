@@ -1,0 +1,2 @@
+-e git://github.com/smarnach/pyexiftool.git#egg=exiftool
+envoy

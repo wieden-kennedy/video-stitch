@@ -37,3 +37,12 @@ print combined # print stitched video to stdout
 
 
 ```
+
+Installation
+============
+
+Make sure you have `exittool` installed.
+
+```
+sudo apt-get install libimage-exiftool-perl
+````
