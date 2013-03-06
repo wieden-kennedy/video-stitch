@@ -1,10 +1,14 @@
 from os.path import join
 from cStringIO import StringIO
 from sh import ffmpeg, wc, ls
+from Queue import Queue
 
 def stitch(videos, output):
-	_in = ''
-	for v in videos:
-		_in += v.read()
+	# Feed the video streams using a generator to avoid
+	# in-memory concat of all the streams
+	def feed():
+		for v in videos:
+			yield v.read()
 
-	ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=_in, _in_bufsize=1024)
+	ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+	return open(output, 'r')
