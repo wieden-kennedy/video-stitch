@@ -10,5 +10,5 @@ def stitch(videos, output):
 		for v in videos:
 			yield v.read()
 
-	ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+	ffmpeg("-q:v", "0", '-vcodec', 'libx264', '-acodec', 'libfaac', output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
 	return open(output, 'r')
