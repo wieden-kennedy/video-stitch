@@ -7,6 +7,7 @@ def normalize(video_file, output):
     def feed():
         return video_file.read()
     ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+    return open(output, 'r')
 
 def stitch(videos, output):
 	# Feed the video streams using a generator to avoid
