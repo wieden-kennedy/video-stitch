@@ -3,6 +3,11 @@ from cStringIO import StringIO
 from sh import ffmpeg, wc, ls
 from Queue import Queue
 
+def normalize(video_file, output):
+    def feed():
+        return video_file.read()
+    ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+
 def stitch(videos, output):
 	# Feed the video streams using a generator to avoid
 	# in-memory concat of all the streams
