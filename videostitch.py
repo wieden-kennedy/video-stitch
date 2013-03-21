@@ -6,7 +6,7 @@ from sh import ffmpeg, ffprobe, wc, ls
 from Queue import Queue
 
 def _probe(video_file):
-    if type(video_file) == file:
+    if hasattr(video_file, 'read'):
         out = ffprobe("pipe:0", _in=video_file.read(), _in_bufsize=1024).stderr
         video_file.seek(0)
     else:
@@ -22,9 +22,9 @@ def normalize(video_path, output=None):
     if type(video_path) == file:
         video_path = file.name    
     if output is None:
-        output = tempfile.NamedTemporaryFile(suffix="stitch.mp4", dir="./").name
+        output = tempfile.NamedTemporaryFile(suffix="stitch.mp4", dir="/tmp/").name
     change_frame_rate(video_path, output)
-    tmp = tempfile.NamedTemporaryFile(suffix="stitch.mpeg", dir="./")
+    tmp = tempfile.NamedTemporaryFile(suffix="stitch.mpeg", dir="/tmp/")
     return to_mpeg(output, tmp.name)
 
 def change_frame_rate(video_file, output, fps=24):
@@ -39,7 +39,7 @@ def change_frame_rate(video_file, output, fps=24):
         ffmpeg("-r", frame_rate, "-i", "pipe:0", "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
     else:
         ffmpeg("-r", frame_rate, "-i", video_file, "-r", "24", output, y=True)
-    return open(output, 'r')
+    return open(output, 'r')`
 
 def get_frame_rate(video_file):
     """
@@ -154,7 +154,7 @@ def stitch(videos, output, vcodec="libx264", acodec="libmp3lame"):
 def stitch_to_theora(videos, output):
     return stitch(videos, output, vcodec='libtheora', acodec='libvorbis')
 
-def stich_to_mp4(videos, output):
+def stitch_to_mp4(videos, output):
     return stitch(videos, output, vcodec="libx264", acodec="libmp3lame")
 
 DEFAULT_PROCESSORS = [
@@ -171,6 +171,8 @@ def process_video(video_path, processors=DEFAULT_PROCESSORS):
         video_path = file.name
     current_file = normalize(video_path)
     for function in processors:
-        output = tempfile.NamedTemporaryFile(suffix="stitch.mpg", dir="./").name
+        output = tempfile.NamedTemporaryFile(suffix="stitch.mpg", dir="/tmp/").name
+        old_file = current_file
         current_file = function(current_file, output)
+        old_file.close()
     return open(output, 'r')
