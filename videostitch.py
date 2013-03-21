@@ -1,30 +1,31 @@
 import re
+import tempfile
 from os.path import join
 from cStringIO import StringIO
 from sh import ffmpeg, ffprobe, wc, ls
 from Queue import Queue
 
-
 def _probe(video_file):
     if type(video_file) == file:
-        out = ffprobe("pipe:0", _in=feed(), _in_bufsize=1024).stderr
+        out = ffprobe("pipe:0", _in=video_file.read(), _in_bufsize=1024).stderr
+        video_file.seek(0)
     else:
         out = ffprobe(video_file)
+    if len(out) > 0:
+        return out
     return out.stderr
-        
 
-def normalize(video_file, output):
+def normalize(video_path, output=None):
     """
-    Transcode the video to mpeg.
+    Normalize the frame rate of the video at the given path and transcode to mpeg
     """
-    def feed():
-        return video_file.read()
-
-    if type(video_file) == file:
-        ffmpeg("-y", "-q:v", "0", output, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
-    else:
-        ffmpeg("-y", "-q:v", "0", output, i=video_file, r=25)
-    return open(output, 'r')
+    if type(video_path) == file:
+        video_path = file.name    
+    if output is None:
+        output = tempfile.NamedTemporaryFile(suffix="stitch.mp4", dir="./").name
+    change_frame_rate(video_path, output)
+    tmp = tempfile.NamedTemporaryFile(suffix="stitch.mpeg", dir="./")
+    return to_mpeg(output, tmp.name)
 
 def change_frame_rate(video_file, output, fps=24):
     """
@@ -37,7 +38,7 @@ def change_frame_rate(video_file, output, fps=24):
     if type(video_file) == file:
         ffmpeg("-r", frame_rate, "-i", "pipe:0", "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
     else:
-        ffmpeg("-r", frame_rate, "-i", output, "-r", "24", output, y=True)
+        ffmpeg("-r", frame_rate, "-i", video_file, "-r", "24", output, y=True)
     return open(output, 'r')
 
 def get_frame_rate(video_file):
@@ -57,7 +58,7 @@ def get_frame_rate(video_file):
             frame_rate = float(matches.groups()[0])
         except IndexError:
             pass
-    video_file.seek(0)
+    
     return frame_rate
 
 def get_dimensions(video_file):
@@ -68,13 +69,12 @@ def get_dimensions(video_file):
     width = height = 0
     def feed():
         return video_file.read()
-    pattern = re.compile(r'([0-9]{3,4})x([0-9]{3,4}),')
+    pattern = re.compile(r'([0-9]{3,4})x([0-9]{3,4})')
 
     out = _probe(video_file)
     matches = pattern.search(out)
     if matches:
         width, height = map(int, matches.groups()[0:2])
-    video_file.seek(0)
     return width, height
 
 def crop_square(video_file, output):
@@ -111,7 +111,12 @@ def to_mpeg(video_file, output):
     """
     def feed():
         return video_file.read()
-    ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+
+    if type(video_file) == file:
+        ffmpeg("-y", "-q:v", "0", output, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+    else:
+        ffmpeg("-y", "-q:v", "0", output, i=video_file, r=25)
+    
     return open(output, 'r')
 
 def to_mp4(video_file, output):
@@ -132,7 +137,7 @@ def resize(video_file, output, dimensions=(360,360)):
     ffmpeg("-i", "pipe:0", "-s", "%sx%s" % dimensions, output, y=True, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
     
-def stitch(videos, output):
+def stitch(videos, output, vcodec="libx264", acodec="libmp3lame"):
     """
     Stitch together the video files in the iterable 'videos'    
     """
@@ -143,39 +148,29 @@ def stitch(videos, output):
         """
         for v in videos:
             yield v.read()
-    ffmpeg("-q:v", "0", '-vcodec', 'libx264', '-acodec', 'libmp3lame', output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+    ffmpeg("-q:v", "0", '-vcodec', vcodec, '-acodec', acodec, output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
 
+def stitch_to_theora(videos, output):
+    return stitch(videos, output, vcodec='libtheora', acodec='libvorbis')
 
-def stitch_theora(videos, output):
-    """
-    Stitch together the video files in the iterable 'videos'    
-    """
-    def feed():
-        """
-        Feed the video streams using a generator to avoid
-        in-memory concat of all the streams
-        """
-        for v in videos:
-            yield v.read()
-    ffmpeg("-q:v", "0", '-vcodec', 'libtheora', '-acodec', 'libvorbis', output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
-    return open(output, 'r')
-
+def stich_to_mp4(videos, output):
+    return stitch(videos, output, vcodec="libx264", acodec="libmp3lame")
 
 DEFAULT_PROCESSORS = [
-    change_frame_rate,
     crop_square,
     resize
     ]
 
 
-def process_video(video_file, output, processors=DEFAULT_PROCESSORS):
+def process_video(video_path, processors=DEFAULT_PROCESSORS):
     """
     Run the processors in the iterable processsors
-    """
-    current_file = video_file
-    def feed():
-        current_file.read()
+    """ 
+    if type(video_path) == file:
+        video_path = file.name
+    current_file = normalize(video_path)
     for function in processors:
+        output = tempfile.NamedTemporaryFile(suffix="stitch.mpg", dir="./").name
         current_file = function(current_file, output)
     return open(output, 'r')
