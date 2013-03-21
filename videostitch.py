@@ -88,16 +88,38 @@ def to_theora(video_file, output):
     return open(output, "r")
 
 def to_mpeg(video_file, output):
+    """
+    Transcode the given file to MPEG
+    """
     def feed():
         return video_file.read()
     ffmpeg("-q:v", "0", output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
+
+def to_mp4(video_file, output):
+    """
+    Transcode the given file to MP4 (H264)
+    """
+    def feed():
+        return video_file.read()
+    ffmpeg("-i", "pipe:0", "-sameq", "-vcodec libx264", "-acodec libfaac", output, _in=feed(), _in_bufsize=1024)
+    return open(output, 'r')
     
 def stitch(videos, output):
-    # Feed the video streams using a generator to avoid
-    # in-memory concat of all the streams
+    """
+    Stitch together the video files in the iterable 'videos'    
+    """
     def feed():
+        """
+        Feed the video streams using a generator to avoid
+        in-memory concat of all the streams
+        """
         for v in videos:
             yield v.read()
     ffmpeg("-q:v", "0", '-vcodec', 'libx264', '-acodec', 'libmp3lame', output, y=True, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
+
+
+DEFAULT_OPERATIONS = [
+    
+    ]
