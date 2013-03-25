@@ -36,9 +36,9 @@ def change_frame_rate(video_file, output, fps=24):
     frame_rate = get_frame_rate(video_file)
 
     if type(video_file) == file:
-        avconv("-y", "-i", "pipe:0", "-strict experimental", "-vf", "scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024)
+        avconv("-y", "-i", "pipe:0", "-strict","experimental", "-vf", "scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024)
     else:
-        avconv("-y", "-i", video_file, "-strict experimental", "-vf", "scale=%s:%s" % get_dimensions(video_file), "-r", "24", output)
+        avconv("-y", "-i", video_file, "-strict", "experimental", "-vf", "scale=%s:%s" % get_dimensions(video_file), "-r", "24", output)
     return open(output, 'r')
 
 def get_frame_rate(video_file):
@@ -102,7 +102,7 @@ def to_theora(video_file, output):
     """
     def feed():
         return video_file.read()
-    ffmpeg("-i", "pipe:0",  "-vcodec", "libtheora", "-acodec",  "libvorbis", output, _in=feed(), _in_bufisize=1024)
+    ffmpeg("-y", "-i", "pipe:0",  "-vcodec", "libtheora", "-acodec",  "libvorbis", output, _in=feed(), _in_bufisize=1024)
     return open(output, "r")
 
 def to_mpeg(video_file, output):
