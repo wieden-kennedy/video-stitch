@@ -2,7 +2,7 @@ import re
 import tempfile
 from os.path import join
 from cStringIO import StringIO
-from sh import ffmpeg, ffprobe, wc, ls
+from sh import ffmpeg, ffprobe, wc, ls, avconv
 from Queue import Queue
 
 def _probe(video_file):
@@ -36,9 +36,9 @@ def change_frame_rate(video_file, output, fps=24):
     frame_rate = get_frame_rate(video_file)
 
     if type(video_file) == file:
-        ffmpeg("-i", "pipe:0", "-strict experimental", "-vf scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
+        avconv("-i", "pipe:0", "-strict experimental", "-vf scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
     else:
-        ffmpeg("-i", video_file, "-strict experimental", "-vf scale=%s:%s" % get_dimensions(video_file),"-r", "24", output, y=True)
+        avconv("-i", video_file, "-strict experimental", "-vf scale=%s:%s" % get_dimensions(video_file),"-r", "24", output, y=True)
     return open(output, 'r')
 
 def get_frame_rate(video_file):
