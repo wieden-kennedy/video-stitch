@@ -93,7 +93,7 @@ def crop(video_file, dimensions, output, origin=(0,0)):
     def feed():
         return video_file.read()
     format = dimensions + origin
-    ffmpeg("-y", "-i", "pipe:0", "-vf", "crop=%s:%s:%s:%s" % format , output,  _in=feed(), _in_bufsize=1024)
+    ffmpeg("-y", "-i", "pipe:0", "-vf", "crop=%s:%s:%s:%s" % format, output,  _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
 
 def to_theora(video_file, output):
@@ -115,7 +115,7 @@ def to_mpeg(video_file, output):
     if type(video_file) == file:
         ffmpeg("-y", "-i", "pipe:0", "-r", 25, output, _in=feed(), _in_bufsize=1024)
     else:
-        ffmpeg("-y", output, i=video_file, r=25)
+        ffmpeg("-y", "-i", video_file, "r", 25, output)
     
     return open(output, 'r')
 
