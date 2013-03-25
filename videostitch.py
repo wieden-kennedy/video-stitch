@@ -102,7 +102,7 @@ def to_theora(video_file, output):
     """
     def feed():
         return video_file.read()
-    ffmpeg("-y", "-i", "pipe:0",  "-vcodec", "libtheora", "-acodec",  "libvorbis", output, _in=feed(), _in_bufisize=1024)
+    ffmpeg("-y", "-i", "pipe:0",  "-vcodec", "libtheora", "-acodec",  "libvorbis", output, _in=feed(), _in_bufsize=1024)
     return open(output, "r")
 
 def to_mpeg(video_file, output):
