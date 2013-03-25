@@ -36,9 +36,9 @@ def change_frame_rate(video_file, output, fps=24):
     frame_rate = get_frame_rate(video_file)
 
     if type(video_file) == file:
-        ffmpeg("-r", frame_rate, "-i", "pipe:0", "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
+        ffmpeg("-i", "pipe:0", "-vf scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
     else:
-        ffmpeg("-r", frame_rate, "-i", video_file, "-r", "24", output, y=True)
+        ffmpeg("-i", video_file, "-vf scale=%s:%s" % get_dimensions(video_file),"-r", "24", output, y=True)
     return open(output, 'r')
 
 def get_frame_rate(video_file):
