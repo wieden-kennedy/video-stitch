@@ -134,7 +134,7 @@ def resize(video_file, output, dimensions=(360,360)):
     """
     def feed():
         return video_file.read()
-    ffmpeg("-i", "pipe:0", "-s", "%sx%s" % dimensions, output, y=True, _in=feed(), _in_bufsize=1024)
+    ffmpeg("-y", "-i", "pipe:0", "-s", "%sx%s" % dimensions, output, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
     
 def stitch(videos, output, vcodec="libx264", acodec="libmp3lame"):
