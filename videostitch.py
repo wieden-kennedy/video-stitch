@@ -36,9 +36,9 @@ def change_frame_rate(video_file, output, fps=24):
     frame_rate = get_frame_rate(video_file)
 
     if type(video_file) == file:
-        avconv("-i", "pipe:0", "-strict experimental", "-vf scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024, y=True)
+        avconv("-y", "-i", "pipe:0", "-strict experimental", "-vf", "scale=%s:%s" % get_dimensions(video_file.name), "-r", "24", output, _in=feed(), _in_bufsize=1024)
     else:
-        avconv("-i", video_file, "-strict experimental", "-vf scale=%s:%s" % get_dimensions(video_file),"-r", "24", output, y=True)
+        avconv("-y", "-i", video_file, "-strict experimental", "-vf", "scale=%s:%s" % get_dimensions(video_file), "-r", "24", output)
     return open(output, 'r')
 
 def get_frame_rate(video_file):
@@ -93,7 +93,7 @@ def crop(video_file, dimensions, output, origin=(0,0)):
     def feed():
         return video_file.read()
     format = dimensions + origin
-    ffmpeg("-i", "pipe:0", "-filter:v", "crop=%s:%s:%s:%s" % format , output, y=True, _in=feed(), _in_bufsize=1024)
+    ffmpeg("-y", "-i", "pipe:0", "-vf", "crop=%s:%s:%s:%s" % format , output,  _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
 
 def to_theora(video_file, output):
@@ -113,9 +113,9 @@ def to_mpeg(video_file, output):
         return video_file.read()
 
     if type(video_file) == file:
-        ffmpeg("-y", "-q:v", "0", output, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+        ffmpeg("-y", output, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
     else:
-        ffmpeg("-y", "-q:v", "0", output, i=video_file, r=25)
+        ffmpeg("-y", output, i=video_file, r=25)
     
     return open(output, 'r')
 
@@ -125,7 +125,7 @@ def to_mp4(video_file, output):
     """
     def feed():
         return video_file.read()
-    ffmpeg("-i", "pipe:0", "-sameq", "-vcodec libx264", "-acodec libmp3lame", output, _in=feed(), _in_bufsize=1024)
+    ffmpeg("-y", "-i", "pipe:0", "-sameq", "-vcodec",  "libx264", "-acodec",  "libmp3lame", output, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
 
 def resize(video_file, output, dimensions=(360,360)):
