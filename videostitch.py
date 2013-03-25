@@ -113,7 +113,7 @@ def to_mpeg(video_file, output):
         return video_file.read()
 
     if type(video_file) == file:
-        ffmpeg("-y", output, i="pipe:0", r=25, _in=feed(), _in_bufsize=1024)
+        ffmpeg("-y", "-i", "pipe:0", "-r", 25, output, _in=feed(), _in_bufsize=1024)
     else:
         ffmpeg("-y", output, i=video_file, r=25)
     
