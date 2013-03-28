@@ -128,7 +128,7 @@ def to_mp4(video_file, output):
     ffmpeg("-y", "-i", "pipe:0", "-sameq", "-vcodec",  "libx264", "-acodec",  "libmp3lame", output, _in=feed(), _in_bufsize=1024)
     return open(output, 'r')
 
-def resize(video_file, output, dimensions=(360,360)):
+def resize(video_file, output, dimensions=(720,720)):
     """
     Resize the video to the given dimensions
     """
