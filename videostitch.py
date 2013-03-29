@@ -93,7 +93,11 @@ def crop(video_file, dimensions, output, origin=(0,0)):
     def feed():
         return video_file.read()
     format = dimensions + origin
-    ffmpeg("-y", "-i", "pipe:0", "-vf", "crop=%s:%s:%s:%s" % format, output,  _in=feed(), _in_bufsize=1024)
+
+    if type(video_file) == file:
+        ffmpeg("-y", "-i", "pipe:0", "-vf", "crop=%s:%s:%s:%s" % format, output,  _in=feed(), _in_bufsize=1024)
+    else:
+        ffmpeg("-y", "-i", video_file, "-vf", "crop=%s:%s:%s:%s" % format, output)
     return open(output, 'r')
 
 def to_theora(video_file, output):
@@ -116,7 +120,6 @@ def to_mpeg(video_file, output):
         ffmpeg("-y", "-i", "pipe:0", "-r", 25, output, _in=feed(), _in_bufsize=1024)
     else:
         ffmpeg("-y", "-i", video_file, "-r", 25, output)
-    
     return open(output, 'r')
 
 def to_mp4(video_file, output):
@@ -134,7 +137,10 @@ def resize(video_file, output, dimensions=(360,360)):
     """
     def feed():
         return video_file.read()
-    ffmpeg("-y", "-i", "pipe:0", "-s", "%sx%s" % dimensions, output, _in=feed(), _in_bufsize=1024)
+    if type(video_file) == file:
+        ffmpeg("-y", "-i", "pipe:0", "-s", "%sx%s" % dimensions, output, _in=feed(), _in_bufsize=1024)
+    else:
+        ffmpeg("-y", "-i", video_file, "-s", "%sx%s" % dimensions, output)
     return open(output, 'r')
     
 def stitch(videos, output, vcodec="libx264", acodec="libmp3lame"):
@@ -173,6 +179,6 @@ def process_video(video_path, processors=DEFAULT_PROCESSORS):
     for function in processors:
         output = tempfile.NamedTemporaryFile(suffix="stitch.mpg", dir="/tmp/").name
         old_file = current_file
-        current_file = function(current_file, output)
+        current_file = function(current_file.name, output)
         old_file.close()
     return open(output, 'r')
