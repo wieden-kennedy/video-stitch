@@ -179,7 +179,8 @@ def process_video(video_path, processors=DEFAULT_PROCESSORS):
     for function in processors:
         output = tempfile.NamedTemporaryFile(suffix="stitch.mpg", dir="/tmp/").name
         old_file = current_file
-        current_file = function(current_file.name, output)
+        current_file = function(video_path, output)
+        video_path = current_file.name
         old_file.close()
     current_file = normalize(video_path)
     return current_file
